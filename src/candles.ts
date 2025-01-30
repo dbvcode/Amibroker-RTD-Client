@@ -81,13 +81,14 @@ export function getLastLiveCandle(symbol: string) {
 
 export function generateRandomHistoricData(
   symbol: string,
-  startDate: DateTime
+  startDate: number
 ) {
+  const stDate=DateTime.fromMillis(startDate);
   const now = DateTime.now();
-  const diff = now.diff(startDate).as("minutes");
+  const diff = now.diff(stDate).as("minutes");
 
   for (let i = 0; i < diff; i++) {
-    const date = startDate.plus({ minutes: i });
+    const date = stDate.plus({ minutes: i });
     if (!tempData[symbol]) {
       tempData[symbol] = {};
     }
@@ -101,7 +102,7 @@ export function generateRandomLiveCandle(symbol: string) {
     tempData[symbol][DateTime.now().toMillis().toString()] = oneRandomCandle();
   } else {
     //no symbol wanted historic data so I push it now
-    generateRandomHistoricData(symbol, DateTime.now().minus({ hours: 2 }));
+    generateRandomHistoricData(symbol, DateTime.now().minus({ hours: 2 }).valueOf());
   }
 }
 

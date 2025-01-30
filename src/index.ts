@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { AmibrokerConnection } from "./amibroker";
+import { AmibrokerConnection, ICommand } from "./amibroker";
 import {
   exportHistoricDataForSymbolAsBackfill,
   generateRandomHistoricData,
@@ -24,54 +24,45 @@ setInterval(() => {
   }
 }, TICK_INTERVAL);
 
-function handleCommand(command: any) {
-  console.log("handleCommand", command);
-  switch (command.cmd) {
-    case "addsym":
-      addSymbolToWatchlist(command.arg);
+function handleCommand(command: ICommand) {
+  switch (command.command) {
+    case "add_watchlist":
+      addSymbolToWatchlist(command.symbol);
       break;
 
-    case "remsym":
-      removeSymbolFromWatchlist(command.arg);
+    case "remove_watchlist":
+      removeSymbolFromWatchlist(command.symbol);
       break;
 
-    case "bfsym":
+    case "backfill_sym":
       console.log("Not implemented: ", command);
       break;
 
-    case "bfauto": {
-      //Get data from one date to now
-      const info = command.arg.split(" ");
-      const symbol = info[0];
-      const start = DateTime.fromFormat(
-        info[1] + " " + info[2],
-        "yyyyMMdd HHmmss"
-      );
+    case "backfill_from": {
       //generate historic data
-      generateRandomHistoricData(symbol, start);
+      generateRandomHistoricData(command.symbol, command.start);
       //send the historic data
-      ab.send(exportHistoricDataForSymbolAsBackfill(symbol));
+      ab.send(exportHistoricDataForSymbolAsBackfill(command.symbol));
       //add symbol to watchlist
-      addSymbolToWatchlist(symbol);
+      addSymbolToWatchlist(command.symbol);
       break;
     }
 
-    case "bffull": {
+    case "backfill_full": {
       //full history
-      const symbol = command.arg;
       const start = DateTime.now().minus({ days: 3 });
-      generateRandomHistoricData(symbol, start);
-      ab.send(exportHistoricDataForSymbolAsBackfill(symbol));
+      generateRandomHistoricData(command.symbol, start.valueOf());
+      ab.send(exportHistoricDataForSymbolAsBackfill(command.symbol));
       break;
     }
 
-    case "bfall": {
+    case "backfill_all": {
       console.log("Not implemented: ", command);
       break;
     }
 
     default:
-      console.error(`Unknown command: ${command.cmd}`);
+      console.error(`Unknown command: ${command}`);
   }
 }
 
